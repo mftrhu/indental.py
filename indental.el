@@ -48,30 +48,22 @@
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.ndtl\\'" . indental-mode))
 
-;;; indent-line function for Indental
-;; It doesn't do much, simply indenting the current line to the same
-;; level as the previous line if and only if the current line is sitting
-;; at indentation level 0.
-(defun indental-indent-line ()
-  (interactive)
-  (let (prev-indent)
-    (save-excursion
-      (forward-line -1)
-      (beginning-of-line)
-      (setq prev-indent (current-indentation)))
-    (if (= (current-indentation) 0)
-        (indent-line-to prev-indent))))
-
 ;;; Font-lock regex/face definitions
 (defconst indental-font-lock-keywords
   (list
    '("^;.*" . font-lock-comment-face)
    '("^[^ ].+$" . font-lock-constant-face)
    '("\\(\\(?:  \\)+\\)\\w+ : " . font-lock-builtin-face)
+   ;; The following patterns mark-up constructs of my own little
+   ;; markup language.
+   '("\\*\\*\\(.*?\\)\\*\\*" . font-lock-warning-face)
+   '("{b \\(.*?\\)}" . font-lock-warning-face)
+   '("//\\(.*?\\)//" . font-lock-doc-face)
+   '("{i \\(.*?\\)}" . font-lock-doc-face)
    ;; The following pattern requires `font-lock-multiline', and it
    ;; creates some slight issues during editing, colorizing the wrong
    ;; elements until the font-lock is refreshed.
-   '("\\(\\(?:  \\)+\\)\\w+\n\\(\\1  \\)" . font-lock-builtin-face)
+   '("\\(\\(?:  \\)+\\)\\(\\w+\\)\\(\n\\1  \\)" . font-lock-builtin-face)
    )
   "Indental syntax highlighting")
 
@@ -80,8 +72,11 @@
   ;; Set up font-lock
   (set (make-local-variable 'font-lock-multiline) t)
   (set (make-local-variable 'font-lock-defaults) '(indental-font-lock-keywords))
-  ;; Set up the indentation function
-  (set (make-local-variable 'indent-line-function) 'indental-indent-line))
+  (set (make-local-variable 'adaptive-fill-regexp)
+       "[ 	]*\\(\\([-–!|#%;>*·•‣⁃◦&]+\\|[&#*|-]\\)[ 	]*\\)*")
+  (visual-line-mode 1)
+  (adaptive-wrap-prefix-mode 1)
+  )
 
 (provide 'indental-mode)
 
